@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/white"
+    tools:context=".LoginActivity">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/loading"
+        android:scaleType="centerCrop"
+        android:src="@drawable/loading" />
+
+    <LinearLayout
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:layout_marginBottom="36dp"
+        android:layout_marginRight="36dp"
+        android:layout_marginLeft="36dp"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:elevation="2dp"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="left|center"
+            android:text="@string/party_room"
+            android:textColor="@color/blue_grey_900"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.5"
+                android:gravity="center"
+                android:text="@string/room"
+                android:textColor="@color/blue_grey_900"
+                android:textSize="16sp"
+                android:textStyle="normal" />
+
+            <EditText
+                android:singleLine="true"
+                android:lines="1"
+                android:maxLines="1"
+                android:nextFocusRight="@id/login_room_key"
+                android:id="@+id/login_room_num"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:hint="@string/room_hint"
+                android:textColor="@color/blue_grey_900"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.5"
+                android:gravity="center"
+                android:text="@string/key"
+                android:textColor="@color/blue_grey_900"
+                android:textSize="16sp"
+                android:textStyle="normal" />
+
+            <EditText
+                android:singleLine="true"
+                android:lines="1"
+                android:maxLines="1"
+                android:nextFocusRight="@id/login_room_member"
+                android:id="@+id/login_room_key"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:hint="@string/password_hint"
+                android:textColor="@color/blue_grey_900"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.5"
+                android:gravity="center"
+                android:text="@string/member"
+                android:textColor="@color/blue_grey_900"
+                android:textSize="16sp"
+                android:textStyle="normal" />
+
+            <EditText
+                android:singleLine="true"
+                android:lines="1"
+                android:maxLines="1"
+                android:id="@+id/login_room_member"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:hint="@string/_1_2_3_4"
+                android:textColor="@color/blue_grey_900"
+                android:textSize="16sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/login_btn"
+        android:layout_width="128dp"
+        android:layout_height="128dp"
+        android:layout_centerInParent="true"
+        android:layout_margin="0dp"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginEnd="0dp"
+        android:layout_marginBottom="0dp"
+        android:background="@color/alpha"
+        android:backgroundTint="@color/alpha"
+        android:padding="0dp" />
+</RelativeLayout>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="@color/white"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <EditText
+        android:singleLine="true"
+        android:maxLines="1"
+        android:gravity="center"
+        android:textSize="12sp"
+        android:textColor="@color/blue_grey_900"
+        android:hint="간단한 약속정보를 작성해주세요."
+        android:id="@+id/dialog_just_edit_edit"
+        android:layout_margin="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</LinearLayout>

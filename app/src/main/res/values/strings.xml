@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">PartyRoom</string>
+    <string name="loading">loading</string>
+    <string name="party_room">Party Room</string>
+    <string name="room">Room #</string>
+    <string name="room_hint">1001, 1002, ...</string>
+    <string name="key">Key</string>
+    <string name="password_hint">비밀번호</string>
+    <string name="member">Member</string>
+    <string name="_1_2_3_4">1, 2, 3, 4 ...</string>
+
+    <string name="google_map_key">AIzaSyBX4WSrHp-YP5Hdy061tfPeoGjMN5gZjQ8</string>
+</resources>
