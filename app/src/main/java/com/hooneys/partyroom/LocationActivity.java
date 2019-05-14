@@ -26,6 +26,8 @@ public class LocationActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_location);
 
+        getSupportActionBar().setHomeAsUpIndicator(getResources().getDrawable(R.drawable.ic_close_white, null));
+
         locationEdit = (EditText) findViewById(R.id.location_edit_text);
         send = (Button) findViewById(R.id.send_btn);
         send.setOnClickListener(new View.OnClickListener() {

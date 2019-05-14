@@ -17,8 +17,13 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -47,8 +52,11 @@ public class MainActivity extends AppCompatActivity
     private ArrayList<User> userList;
     private SupportMapFragment maps;
     private FloatingActionButton floatMsg, floatLocation;
-    private Marker appoint;
     private GoogleMap tempMap;
+
+    private RelativeLayout notifyLayout;
+    private TextView notifyText;
+    private ImageButton notifyClose;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -173,10 +181,46 @@ public class MainActivity extends AppCompatActivity
 
         maps = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.google_map);
 
+        notifyLayout = findViewById(R.id.main_notify_layout);
+        notifyText = findViewById(R.id.main_notify_text);
+        notifyClose = findViewById(R.id.main_notify_close);
+
+        notifyClose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                notifyLayout.setVisibility(View.GONE);
+            }
+        });
+
         floatMsg = (FloatingActionButton) findViewById(R.id.main_floating_msg);
         floatMsg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                final AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+                alert.setTitle("공지사항");
+                View view = getLayoutInflater().inflate(R.layout.dialog_notify, null);
+                Button notifyShow = view.findViewById(R.id.dialog_notify_show_btn);
+                Button notify_create = view.findViewById(R.id.dialog_notify_create_btn);
+                final AlertDialog dialog = alert.setView(view).show();
+
+                notifyShow.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if(notifyLayout.getVisibility() != View.VISIBLE){
+                            notifyLayout.setVisibility(View.VISIBLE);
+                        }
+                        dialog.dismiss();
+                    }
+                });
+
+                notify_create.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        //Firebase 연결!
+                        dialog.dismiss();
+                        askNotify();
+                    }
+                });
 
             }
         });
@@ -261,7 +305,6 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    // 사용자의 권한 확인 후 사용자의 권한에 대한 응답 결과를 확인하는 콜백 메소드
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] perms, int[] grantResults) {
         if (requestCode == SIGNAL_PERMISSION) {
@@ -308,6 +351,31 @@ public class MainActivity extends AppCompatActivity
                         ),
                         14)
         );
+
+        googleMap.setOnInfoWindowLongClickListener(new GoogleMap.OnInfoWindowLongClickListener() {
+            @Override
+            public void onInfoWindowLongClick(final Marker marker) {
+                String title = marker.getTitle();
+                if(title.contains("메모")){
+                    AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+                    alert.setTitle("약속장소")
+                            .setMessage("약속 장소를 삭제합니다.")
+                            .setPositiveButton("삭제", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    marker.remove();
+                                }
+                            }).setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    }).show();
+                }
+            }
+        });
+
+
     }
 
     private void askAppointment(final GoogleMap googleMap, final LatLng latLng) {
@@ -318,7 +386,33 @@ public class MainActivity extends AppCompatActivity
         alert.setView(view).setPositiveButton("확인", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                 addMarker(googleMap, latLng, appoint_edit.getText().toString());
+                addAppoint(googleMap, latLng, appoint_edit.getText().toString());
+            }
+        }).setNegativeButton("취소", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        }).show();
+
+    }
+
+    private void askNotify() {
+        AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+        alert.setTitle("공지사항 작성");
+        View view = getLayoutInflater().inflate(R.layout.dialog_just_edit, null);
+        final EditText notify_edit = (EditText) view.findViewById(R.id.dialog_just_edit_edit);
+        notify_edit.setHint("공지사항을 작성해주세요.");
+        notify_edit.setGravity(Gravity.LEFT);
+        alert.setView(view).setPositiveButton("작성완료", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if(notify_edit.getText().length() > 0){
+                    notifyText.setText(notify_edit.getText().toString());
+                    if(notifyLayout.getVisibility() != View.VISIBLE){
+                        notifyLayout.setVisibility(View.VISIBLE);
+                    }
+                }
             }
         }).setNegativeButton("취소", new DialogInterface.OnClickListener() {
             @Override
@@ -338,21 +432,17 @@ public class MainActivity extends AppCompatActivity
                 .zIndex((float) 1));
     }
 
-    private void addMarker(GoogleMap googleMap, LatLng latLng, String title){
-        if(appoint != null){
-            appoint.remove();
-        }
-        appoint = googleMap.addMarker(new MarkerOptions()
+    private void addAppoint(GoogleMap googleMap, LatLng latLng, String title){
+        googleMap.addMarker(new MarkerOptions()
                 .position(latLng)
                 .icon(MyApp.getAppointMarker(getResources().getDrawable(R.drawable.ic_flag_black_24dp, null)))
-                .snippet("나")
-                .title(title)
+                .snippet("등록인 : "+ "나")
+                .title("메모 : " + title)
                 .zIndex((float) 1));
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode){
             case SIGNAL_LOCATION:
                 if(resultCode == RESULT_OK){
@@ -362,11 +452,14 @@ public class MainActivity extends AppCompatActivity
                     String location = data.getStringExtra("location_name");
                     Toast.makeText(getApplicationContext(), "받은 위치는 : " + lat + " / " + lon + " / " + location, Toast.LENGTH_SHORT).show();
 
-//                    addMarker(tempMap, new LatLng(lat, lon), location);
+                    addAppoint(tempMap, new LatLng(lat, lon), location);
 
                 }else{
                     //실패
                 }
+                break;
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
                 break;
         }
     }
