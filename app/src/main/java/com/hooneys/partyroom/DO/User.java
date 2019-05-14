@@ -8,11 +8,11 @@ public class User {
     private String msg;
 
     public User() {
-        this.nickName = null;
+        this.nickName = "None";
         this.markerColor = 0.0f;
         this.lat = 0.0f;
         this.lon = 0.0f;
-        this.msg = null;
+        this.msg = "없음";
     }
 
     public User(String nickName, float markerColor, float lat, float lon, String msg) {

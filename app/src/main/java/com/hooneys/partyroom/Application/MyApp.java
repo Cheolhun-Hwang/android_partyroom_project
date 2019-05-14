@@ -12,12 +12,16 @@ import android.graphics.drawable.Drawable;
 
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class MyApp extends Application {
     public static String[] permissions = {//import android.Manifest;
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
     };
+
+    public static String roomChannel;
 
     public static BitmapDescriptor appoint_marker;
 

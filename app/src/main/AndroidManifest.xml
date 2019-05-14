@@ -19,10 +19,13 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:parentActivityName=".MainActivity"
             android:screenOrientation="portrait"
-            android:name=".LocationActivity"></activity>
-        <!-- 라이브러리 사용 설정 -->
+            android:theme="@style/AppTheme.NoActionbar"
+            android:name=".UserActivity"></activity>
+        <activity
+            android:name=".LocationActivity"
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait" /> <!-- 라이브러리 사용 설정 -->
         <uses-library android:name="com.google.android.maps" />
 
         <meta-data
@@ -36,18 +39,18 @@
             android:name=".LoginActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionbar">
-
-        </activity>
-        <activity
-            android:launchMode="singleTop"
-            android:name=".MainActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionbar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".MainActivity"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionbar">
+
         </activity>
     </application>
 

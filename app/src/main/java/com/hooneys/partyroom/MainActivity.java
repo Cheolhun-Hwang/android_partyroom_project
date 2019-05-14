@@ -34,6 +34,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.hooneys.partyroom.Application.MyApp;
 import com.hooneys.partyroom.DO.User;
 
@@ -46,6 +48,11 @@ public class MainActivity extends AppCompatActivity
     private final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; //10미터 당
     private final long MIN_TIME_UPDATES = 1000 * 30 * 1; // 30초마다
     private final int SIGNAL_LOCATION = 2001;
+
+    public static final DatabaseReference rootRef = FirebaseDatabase
+            .getInstance().getReference("PartyRoom");
+
+
 
     private LocationManager manager;
     private Location nowAppLocation;
@@ -83,6 +90,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void getData() {
+//        MainActivity.rootRef.child()
         userList = new ArrayList<>();
 
         User item1 = new User();

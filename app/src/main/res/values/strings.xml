@@ -10,4 +10,7 @@
     <string name="_1_2_3_4">1, 2, 3, 4 ...</string>
 
     <string name="google_map_key">AIzaSyBX4WSrHp-YP5Hdy061tfPeoGjMN5gZjQ8</string>
+    <string name="add_visitor">방문자 등록</string>
+    <string name="hint_user_check">* 기존 방문자의 경우 같은 닉네임을 작성해주세요.</string>
+    <string name="marker_color">Marker Color</string>
 </resources>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="map_markers">
+        <item name="0.0">Red</item>
+        <item name="30.0">Orange</item>
+        <item name="60.0">Yellow</item>
+        <item name="120.0">Green</item>
+        <item name="180.0">Cyan</item>
+        <item name="210.0">Azure</item>
+        <item name="240.0">Blue</item>
+        <item name="270.0">Violet</item>
+        <item name="300.0">Magenta</item>
+        <item name="330.0">Rose</item>
+    </string-array>
+
+    <string-array name="map_markers_float">
+        <item name="0.0">0.0</item>
+        <item name="30.0">30.0</item>
+        <item name="60.0">60.0</item>
+        <item name="120.0">120.0</item>
+        <item name="180.0">180.0</item>
+        <item name="210.0">210.0</item>
+        <item name="240.0">240.0</item>
+        <item name="270.0">270.0</item>
+        <item name="300.0">300.0</item>
+        <item name="330.0">330.0</item>
+    </string-array>
+
+    <string-array name="room_type">
+        <item name="add">생성</item>
+        <item name="enter">입장</item>
+    </string-array>
+
+    <string-array name="login_type">
+        <item name="add">생성</item>
+        <item name="enter">입장</item>
+    </string-array>
+</resources>

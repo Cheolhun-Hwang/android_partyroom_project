@@ -28,7 +28,9 @@ dependencies {
     implementation 'com.android.support:design:28.0.0'
     implementation 'com.google.android.gms:play-services-maps:16.1.0'
     //Firebase modules...
-    implementation 'com.google.firebase:firebase-core:16.0.7'
+    //Firebase
+    implementation 'com.google.firebase:firebase-core:16.0.8'
+    implementation 'com.google.firebase:firebase-database:16.1.0'
 }
 
 
