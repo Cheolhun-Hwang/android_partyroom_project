@@ -166,9 +166,17 @@ public class MainActivity extends AppCompatActivity
             if(manager.getLastKnownLocation(LocationManager.GPS_PROVIDER) != null){
                 nowAppLocation = manager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 Toast.makeText(getApplicationContext(),"GPS 값 받음,", Toast.LENGTH_SHORT).show();
+                if(nowAppLocation != null){
+                    setLocationForRoom();
+                    setLocationForUser();
+                }
             }else if(manager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER) != null){
                 nowAppLocation = manager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
                 Toast.makeText(getApplicationContext(),"Wifi 값 받음", Toast.LENGTH_SHORT).show();
+                if(nowAppLocation != null){
+                    setLocationForRoom();
+                    setLocationForUser();
+                }
             }else{
                 // 1. GPS 또는 Wifi 켜지지 않은 경우
                 Toast.makeText(getApplicationContext(),"GPS 또는 Wifi 켜주세요,", Toast.LENGTH_SHORT).show();
@@ -296,6 +304,39 @@ public class MainActivity extends AppCompatActivity
                 + nowAppLocation.getAccuracy() + " / time : "
                 + nowAppLocation.getTime() + " / provider : "
                 + nowAppLocation.getProvider());
+
+        setLocationForRoom();
+        setLocationForUser();
+    }
+
+    private void setLocationForUser() {
+        MainActivity.rootRef
+                .child("User")
+                .child(MyApp.roomNickName)
+                .child("lat")
+                .setValue(nowAppLocation.getLatitude());
+        MainActivity.rootRef
+                .child("User")
+                .child(MyApp.roomNickName)
+                .child("lon")
+                .setValue(nowAppLocation.getLongitude());
+    }
+
+    private void setLocationForRoom() {
+        MainActivity.rootRef
+                .child("Room")
+                .child("Talk")
+                .child(MyApp.roomChannel)
+                .child(MyApp.roomNickName)
+                .child("lat")
+                .setValue(nowAppLocation.getLatitude());
+        MainActivity.rootRef
+                .child("Room")
+                .child("Talk")
+                .child(MyApp.roomChannel)
+                .child(MyApp.roomNickName)
+                .child("lon")
+                .setValue(nowAppLocation.getLongitude());
     }
 
     @Override

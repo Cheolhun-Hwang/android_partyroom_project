@@ -6,6 +6,7 @@ public class User {
     private float lat;
     private float lon;
     private String msg;
+    private String pwd;
 
     public User() {
         this.nickName = "None";
@@ -13,14 +14,17 @@ public class User {
         this.lat = 0.0f;
         this.lon = 0.0f;
         this.msg = "없음";
+        this.pwd = "";
     }
 
-    public User(String nickName, float markerColor, float lat, float lon, String msg) {
+    public User(String nickName, float markerColor, float lat,
+                float lon, String msg, String p) {
         this.nickName = nickName;
         this.markerColor = markerColor;
         this.lat = lat;
         this.lon = lon;
         this.msg = msg;
+        this.pwd = p;
     }
 
     public String getNickName() {
@@ -61,5 +65,13 @@ public class User {
 
     public void setMsg(String msg) {
         this.msg = msg;
+    }
+
+    public String getPwd() {
+        return pwd;
+    }
+
+    public void setPwd(String pwd) {
+        this.pwd = pwd;
     }
 }

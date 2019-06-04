@@ -14,6 +14,7 @@ import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.hooneys.partyroom.DO.User;
 
 public class MyApp extends Application {
     public static String[] permissions = {//import android.Manifest;
@@ -21,7 +22,9 @@ public class MyApp extends Application {
             Manifest.permission.ACCESS_COARSE_LOCATION
     };
 
+    public static User myUser;
     public static String roomChannel;
+    public static String roomNickName;
 
     public static BitmapDescriptor appoint_marker;
 

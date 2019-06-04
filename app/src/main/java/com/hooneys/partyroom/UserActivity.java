@@ -1,5 +1,7 @@
 package com.hooneys.partyroom;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,6 +17,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
+import com.hooneys.partyroom.Application.MyApp;
 import com.hooneys.partyroom.DO.User;
 
 import java.util.HashMap;
@@ -34,6 +37,16 @@ public class UserActivity extends AppCompatActivity {
         setContentView(R.layout.activity_user);
 
         init();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        if(isSavingRoom(MyApp.roomChannel)){
+            MyApp.roomNickName = getRoomNickName(MyApp.roomChannel);
+            intentMainActivity();
+        }
     }
 
     private void init() {
@@ -57,6 +70,11 @@ public class UserActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 typeLogin = position;
+                if(position == 0){
+                    markerColor.setVisibility(View.VISIBLE);
+                }else if(position == 1){
+                    markerColor.setVisibility(View.GONE);
+                }
             }
 
             @Override
@@ -73,16 +91,53 @@ public class UserActivity extends AppCompatActivity {
                     addUser();
                 }else if(typeLogin == 1){
                     //Enter
-//                    enterUser();
+                    enterUser();
                 }
             }
         });
 
     }
 
+    private void enterUser() {
+        final String s_nickname = nickName.getText().toString();
+        final String s_pwd = pwd.getText().toString();
+
+        if(s_nickname.trim().isEmpty() || s_pwd.trim().isEmpty()){
+            Toast.makeText(this, "정보를 모두 입력해주세요.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        MainActivity.rootRef.child("User").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot node : dataSnapshot.getChildren()){
+                    if(node.getKey().equals(s_nickname)){
+                        if(node.child("pwd").getValue().toString().equals(s_pwd)){
+                            //성공
+                            MyApp.myUser = node.getValue(User.class);
+                            intentMainActivity();
+                            break;
+                        }
+                        //비번 다름
+                        Toast.makeText(UserActivity.this, "비번을 확인해주세요.",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
+
+    }
+
     private void addUser() {
         final String s_nickname = nickName.getText().toString();
-        String s_pwd = pwd.getText().toString();
+        final String s_pwd = pwd.getText().toString();
 
         if(s_nickname.trim().isEmpty() || s_pwd.trim().isEmpty()){
             Toast.makeText(this, "정보를 모두 입력해주세요.", Toast.LENGTH_SHORT).show();
@@ -97,13 +152,14 @@ public class UserActivity extends AppCompatActivity {
                         Toast.makeText(UserActivity.this, "중복된 닉네임입니다.", Toast.LENGTH_SHORT).show();
                         break;
                     }else{
-                        User user = new User();
+                        final User user = new User();
                         user.setNickName(s_nickname);
                         user.setMarkerColor(markerColorFloat);
+                        user.setPwd(s_pwd);
                         MainActivity.rootRef
                                 .child("User")
                                 .child(s_nickname)
-                                .setValue(user, User.class)
+                                .setValue(user)
                                 .addOnFailureListener(new OnFailureListener() {
                                     @Override
                                     public void onFailure(@NonNull Exception e) {
@@ -113,7 +169,9 @@ public class UserActivity extends AppCompatActivity {
                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void aVoid) {
-
+                                        saveRoomInformation(user);
+                                        MyApp.myUser = user;
+                                        intentMainActivity();
                                     }
                                 });
                     }
@@ -126,4 +184,35 @@ public class UserActivity extends AppCompatActivity {
             }
         });
     }
+
+    private void intentMainActivity() {
+        startActivity(new Intent(getApplicationContext(), MainActivity.class));
+        finish();
+    }
+
+    private void saveRoomInformation(User user) {
+        String key = MyApp.roomChannel + "_";
+        SharedPreferences pref = getSharedPreferences("pref", MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putString(key+"name", user.getNickName());
+        editor.commit();
+    }
+
+    private boolean isSavingRoom(String roomChanel){
+        String key = roomChanel + "_";
+        SharedPreferences pref = getSharedPreferences("pref", MODE_PRIVATE);
+        String nickName = pref.getString(key+"name", null);
+        if(nickName == null){
+            return false;
+        }
+        return true;
+    }
+
+    private String getRoomNickName(String roomChanel){
+        String key = roomChanel + "_";
+        SharedPreferences pref = getSharedPreferences("pref", MODE_PRIVATE);
+        String nickName = pref.getString(key+"name", null);
+        return nickName;
+    }
+
 }
