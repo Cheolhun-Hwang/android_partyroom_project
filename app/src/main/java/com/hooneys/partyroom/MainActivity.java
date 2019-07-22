@@ -9,6 +9,7 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
@@ -34,12 +35,20 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.hooneys.partyroom.Application.MyApp;
 import com.hooneys.partyroom.DO.User;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity
         implements LocationListener, OnMapReadyCallback {
@@ -56,7 +65,6 @@ public class MainActivity extends AppCompatActivity
 
     private LocationManager manager;
     private Location nowAppLocation;
-    private ArrayList<User> userList;
     private SupportMapFragment maps;
     private FloatingActionButton floatMsg, floatLocation;
     private GoogleMap tempMap;
@@ -71,8 +79,32 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         init();
-        getData();
         initGPS();
+
+        MainActivity.rootRef
+                .child("Room")
+                .child("notify")
+                .child(MyApp.roomChannel)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        String text = "현재 공지사항이 없습니다.";
+                        if(dataSnapshot.child("text").getValue() != null){
+                            text = dataSnapshot.child("text").getValue().toString();
+                        }
+
+                        notifyText.setText(text);
+
+                        if(notifyLayout.getVisibility() != View.VISIBLE){
+                            notifyLayout.setVisibility(View.VISIBLE);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
     }
 
     private void initGPS() {
@@ -89,25 +121,82 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void getData() {
-//        MainActivity.rootRef.child()
-        userList = new ArrayList<>();
+    private void getData(final GoogleMap googleMap) {
+        final ArrayList<String> roomUsers = new ArrayList<>();
 
-        User item1 = new User();
-        item1.setNickName("나");
-        item1.setMsg("바쁨");
-        item1.setLat(37.4673786f);
-        item1.setLon(127.126781f);
-        item1.setMarkerColor(BitmapDescriptorFactory.HUE_ORANGE);
-        userList.add(item1);
+        MainActivity.rootRef
+                .child("Room")
+                .child("Talk")
+                .child(MyApp.roomChannel)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        roomUsers.clear();
+                        googleMap.clear();
 
-        User item2 = new User();
-        item2.setNickName("친구");
-        item2.setMsg("친구임");
-        item2.setLat(37.4684886f);
-        item2.setLon(127.126781f);
-        item2.setMarkerColor(BitmapDescriptorFactory.HUE_BLUE);
-        userList.add(item2);
+                        for(DataSnapshot node : dataSnapshot.getChildren()){
+                            roomUsers.add(node.getKey());
+                            Log.d(TAG, "node Key : "+node.getKey() );
+                        }
+                        if(roomUsers.size() > 0){
+                            addEventMarkers(roomUsers, googleMap);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+    }
+
+    private void addEventMarkers(ArrayList<String> roomUsers, final GoogleMap googleMap) {
+        Log.d(TAG, "User Length : " + roomUsers.size());
+        for(String key : roomUsers){
+            Log.d(TAG, "key : "+ key);
+            MainActivity.rootRef
+                    .child("User")
+                    .child(key)
+                    .addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                            Log.d(TAG, "Data : " + dataSnapshot.getValue().toString());
+
+                            double lat = (double) dataSnapshot.child("lat").getValue();
+                            double lon = (double) dataSnapshot.child("lon").getValue();
+                            long marker = (long) dataSnapshot.child("markerColor").getValue();
+
+                            if(googleMap != null){
+                                addMarker(googleMap,
+                                        (float) lat,
+                                        (float) lon,
+                                        marker,
+                                        dataSnapshot.child("nickName").getValue().toString(),
+                                        dataSnapshot.child("msg").getValue().toString()
+                                );
+
+                                if(dataSnapshot.child("nickName").getValue()
+                                        .toString().equals(MyApp.roomNickName)){
+
+                                    googleMap.moveCamera(
+                                            CameraUpdateFactory.newLatLngZoom(
+                                                    new LatLng(
+                                                            (float) lat,
+                                                            (float) lon
+                                                    ),
+                                                    14)
+                                    );
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
+        }
     }
 
     @Override
@@ -380,26 +469,13 @@ public class MainActivity extends AppCompatActivity
         googleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
-                askAppointment(googleMap, latLng);
+                askAppointment(latLng);
             }
         });
 
-        float total_lat = 0.0f, total_lon = 0.0f;
-        for(User user : userList){
-            addMarker(googleMap, user.getLat(),
-                    user.getLon(), user.getMarkerColor(),
-                    user.getNickName(), user.getMsg());
-            total_lat+= user.getLat();
-            total_lon+= user.getLon();
-        }
-        googleMap.moveCamera(
-                CameraUpdateFactory.newLatLngZoom(
-                        new LatLng(
-                                (total_lat/(float) userList.size()),
-                                (total_lon/(float) userList.size())
-                        ),
-                        14)
-        );
+        getData(googleMap);
+
+        getAppointment(googleMap);
 
         googleMap.setOnInfoWindowLongClickListener(new GoogleMap.OnInfoWindowLongClickListener() {
             @Override
@@ -413,6 +489,17 @@ public class MainActivity extends AppCompatActivity
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     marker.remove();
+                                    String title = marker.getTitle();
+                                    String[] info = title.split(",");
+                                    String key = info[1].replaceAll(" ", "");
+
+                                    MainActivity.rootRef
+                                            .child("Room")
+                                            .child("Appointment")
+                                            .child(MyApp.roomChannel)
+                                            .child(key)
+                                            .removeValue();
+
                                 }
                             }).setNegativeButton("취소", new DialogInterface.OnClickListener() {
                         @Override
@@ -427,7 +514,43 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private void askAppointment(final GoogleMap googleMap, final LatLng latLng) {
+    private void getAppointment(final GoogleMap googleMap) {
+        MainActivity.rootRef
+                .child("Room")
+                .child("Appointment")
+                .child(MyApp.roomChannel)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        for(DataSnapshot node : dataSnapshot.getChildren()){
+                            String s_lat = node.child("lat").getValue().toString();
+                            String s_lon = node.child("lon").getValue().toString();
+                            String s_user = node.child("user").getValue().toString();
+                            String s_title = node.child("memo").getValue().toString();
+                            String s_key = node.getKey();
+
+                            double lat = Double.parseDouble(s_lat);
+                            double lon = Double.parseDouble(s_lon);
+
+                            googleMap.addMarker(new MarkerOptions()
+                                    .position(new LatLng(
+                                            (float) lat,
+                                            (float) lon))
+                                    .icon(MyApp.getAppointMarker(getResources().getDrawable(R.drawable.ic_flag_black_24dp, null)))
+                                    .snippet("등록인 : "+ s_user)
+                                    .title("메모 : " + s_title + ", "+s_key)
+                                    .zIndex((float) 1));
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+    }
+
+    private void askAppointment(final LatLng latLng) {
         AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
         alert.setTitle("약속 장소 설정");
         View view = getLayoutInflater().inflate(R.layout.dialog_just_edit, null);
@@ -435,7 +558,7 @@ public class MainActivity extends AppCompatActivity
         alert.setView(view).setPositiveButton("확인", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                addAppoint(googleMap, latLng, appoint_edit.getText().toString());
+                addAppoint(latLng, appoint_edit.getText().toString());
             }
         }).setNegativeButton("취소", new DialogInterface.OnClickListener() {
             @Override
@@ -457,10 +580,12 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if(notify_edit.getText().length() > 0){
-                    notifyText.setText(notify_edit.getText().toString());
-                    if(notifyLayout.getVisibility() != View.VISIBLE){
-                        notifyLayout.setVisibility(View.VISIBLE);
-                    }
+                    MainActivity.rootRef
+                            .child("Room")
+                            .child("notify")
+                            .child(MyApp.roomChannel)
+                            .child("text")
+                            .setValue(notify_edit.getText().toString());
                 }
             }
         }).setNegativeButton("취소", new DialogInterface.OnClickListener() {
@@ -481,13 +606,22 @@ public class MainActivity extends AppCompatActivity
                 .zIndex((float) 1));
     }
 
-    private void addAppoint(GoogleMap googleMap, LatLng latLng, String title){
-        googleMap.addMarker(new MarkerOptions()
-                .position(latLng)
-                .icon(MyApp.getAppointMarker(getResources().getDrawable(R.drawable.ic_flag_black_24dp, null)))
-                .snippet("등록인 : "+ "나")
-                .title("메모 : " + title)
-                .zIndex((float) 1));
+    private void addAppoint(LatLng latLng, String title){
+       Date nowDate = new Date(System.currentTimeMillis());
+        SimpleDateFormat simple = new SimpleDateFormat("yyyyMMdd_hhmmsss", Locale.KOREA);
+
+        Map<String, String> map = new HashMap<>();
+        map.put("memo", title);
+        map.put("user", MyApp.roomNickName);
+        map.put("lat", latLng.latitude+"");
+        map.put("lon", latLng.longitude+"");
+
+        MainActivity.rootRef
+                .child("Room")
+                .child("Appointment")
+                .child(MyApp.roomChannel)
+                .child(simple.format(nowDate))
+                .setValue(map);
     }
 
     @Override
@@ -501,7 +635,7 @@ public class MainActivity extends AppCompatActivity
                     String location = data.getStringExtra("location_name");
                     Toast.makeText(getApplicationContext(), "받은 위치는 : " + lat + " / " + lon + " / " + location, Toast.LENGTH_SHORT).show();
 
-                    addAppoint(tempMap, new LatLng(lat, lon), location);
+                    addAppoint(new LatLng(lat, lon), location);
 
                 }else{
                     //실패
