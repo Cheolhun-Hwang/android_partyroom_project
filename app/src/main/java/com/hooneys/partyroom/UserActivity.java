@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -43,9 +44,28 @@ public class UserActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        if(isSavingRoom(MyApp.roomChannel)){
-            MyApp.roomNickName = getRoomNickName(MyApp.roomChannel);
-            intentMainActivity();
+        boolean flag = isSavingRoom(MyApp.roomChannel);
+        Log.i(TAG, "flag : " + flag);
+        if(flag){;
+            final String nickname = getRoomNickName(MyApp.roomChannel);
+            MainActivity.rootRef
+                    .child("User").addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            for(DataSnapshot node : dataSnapshot.getChildren()){
+                                String key = node.getKey();
+                                if(key.equals(nickname)){
+                                    MyApp.roomNickName = getRoomNickName(MyApp.roomChannel);
+                                    intentMainActivity();
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
         }
     }
 
@@ -115,6 +135,8 @@ public class UserActivity extends AppCompatActivity {
                         if(node.child("pwd").getValue().toString().equals(s_pwd)){
                             //성공
                             MyApp.myUser = node.getValue(User.class);
+                            MyApp.roomNickName = s_nickname;
+                            saveRoomInformation(MyApp.myUser);
                             intentMainActivity();
                             break;
                         }
@@ -195,6 +217,7 @@ public class UserActivity extends AppCompatActivity {
         SharedPreferences pref = getSharedPreferences("pref", MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
         editor.putString(key+"name", user.getNickName());
+        Log.d(TAG, "save name : " + user.getNickName());
         editor.commit();
     }
 

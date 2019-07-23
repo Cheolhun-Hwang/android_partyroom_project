@@ -29,9 +29,11 @@ import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -43,6 +45,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.hooneys.partyroom.Application.MyApp;
 import com.hooneys.partyroom.DO.User;
 
+import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -51,7 +54,7 @@ import java.util.Locale;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity
-        implements LocationListener, OnMapReadyCallback {
+        implements LocationListener, OnMapReadyCallback{
     private final String TAG = MainActivity.class.getSimpleName();
     private final int SIGNAL_PERMISSION = 1001;
     private final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; //10미터 당
@@ -61,13 +64,13 @@ public class MainActivity extends AppCompatActivity
     public static final DatabaseReference rootRef = FirebaseDatabase
             .getInstance().getReference("PartyRoom");
 
-
-
     private LocationManager manager;
     private Location nowAppLocation;
     private SupportMapFragment maps;
     private FloatingActionButton floatMsg, floatLocation;
-    private GoogleMap tempMap;
+    private HashMap<String, Marker> userMap;
+    private HashMap<String, Marker> pointMap;
+    private float mainCameraZoom;
 
     private RelativeLayout notifyLayout;
     private TextView notifyText;
@@ -122,7 +125,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void getData(final GoogleMap googleMap) {
-        final ArrayList<String> roomUsers = new ArrayList<>();
+        if(userMap == null){
+            userMap = new HashMap<>();
+        }
 
         MainActivity.rootRef
                 .child("Room")
@@ -131,15 +136,16 @@ public class MainActivity extends AppCompatActivity
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        roomUsers.clear();
                         googleMap.clear();
+                        userMap.clear();
 
                         for(DataSnapshot node : dataSnapshot.getChildren()){
-                            roomUsers.add(node.getKey());
                             Log.d(TAG, "node Key : "+node.getKey() );
+                            userMap.put(node.getKey(), null);
                         }
-                        if(roomUsers.size() > 0){
-                            addEventMarkers(roomUsers, googleMap);
+
+                        if(userMap.size() > 0){
+                            addEventMarkers(googleMap);
                         }
                     }
 
@@ -150,9 +156,9 @@ public class MainActivity extends AppCompatActivity
                 });
     }
 
-    private void addEventMarkers(ArrayList<String> roomUsers, final GoogleMap googleMap) {
-        Log.d(TAG, "User Length : " + roomUsers.size());
-        for(String key : roomUsers){
+    private void addEventMarkers(final GoogleMap googleMap) {
+        Log.d(TAG, "User Length : " + userMap.size());
+        for(final String key : userMap.keySet()){
             Log.d(TAG, "key : "+ key);
             MainActivity.rootRef
                     .child("User")
@@ -160,12 +166,16 @@ public class MainActivity extends AppCompatActivity
                     .addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-
                             Log.d(TAG, "Data : " + dataSnapshot.getValue().toString());
 
                             double lat = (double) dataSnapshot.child("lat").getValue();
                             double lon = (double) dataSnapshot.child("lon").getValue();
                             long marker = (long) dataSnapshot.child("markerColor").getValue();
+
+                            if(userMap.get(key) != null){
+                                userMap.get(key).remove();
+                                userMap.put(key, null);
+                            }
 
                             if(googleMap != null){
                                 addMarker(googleMap,
@@ -185,7 +195,7 @@ public class MainActivity extends AppCompatActivity
                                                             (float) lat,
                                                             (float) lon
                                                     ),
-                                                    14)
+                                                    mainCameraZoom)
                                     );
                                 }
                             }
@@ -465,7 +475,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onMapReady(final GoogleMap googleMap) {
         Log.d(TAG, "on Map Ready...");
-        tempMap = googleMap;
+        mainCameraZoom = 14.0f;
+
         googleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
@@ -476,6 +487,14 @@ public class MainActivity extends AppCompatActivity
         getData(googleMap);
 
         getAppointment(googleMap);
+
+        googleMap.setOnCameraMoveListener(new GoogleMap.OnCameraMoveListener() {
+            @Override
+            public void onCameraMove() {
+                CameraPosition cameraPosition = googleMap.getCameraPosition();
+                mainCameraZoom = cameraPosition.zoom;
+            }
+        });
 
         googleMap.setOnInfoWindowLongClickListener(new GoogleMap.OnInfoWindowLongClickListener() {
             @Override
@@ -510,11 +529,13 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         });
-
-
     }
 
     private void getAppointment(final GoogleMap googleMap) {
+        if(pointMap == null){
+            pointMap = new HashMap<>();
+        }
+
         MainActivity.rootRef
                 .child("Room")
                 .child("Appointment")
@@ -522,17 +543,26 @@ public class MainActivity extends AppCompatActivity
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        ArrayList<String> exists = new ArrayList<>();
+
                         for(DataSnapshot node : dataSnapshot.getChildren()){
+                            String s_key = node.getKey();
+                            exists.add(s_key);
+
+                            if(pointMap.get(s_key) != null){
+                                pointMap.get(s_key).remove();
+                                pointMap.put(s_key, null);
+                            }
+
                             String s_lat = node.child("lat").getValue().toString();
                             String s_lon = node.child("lon").getValue().toString();
                             String s_user = node.child("user").getValue().toString();
                             String s_title = node.child("memo").getValue().toString();
-                            String s_key = node.getKey();
 
                             double lat = Double.parseDouble(s_lat);
                             double lon = Double.parseDouble(s_lon);
 
-                            googleMap.addMarker(new MarkerOptions()
+                            Marker pointMarker = googleMap.addMarker(new MarkerOptions()
                                     .position(new LatLng(
                                             (float) lat,
                                             (float) lon))
@@ -540,6 +570,15 @@ public class MainActivity extends AppCompatActivity
                                     .snippet("등록인 : "+ s_user)
                                     .title("메모 : " + s_title + ", "+s_key)
                                     .zIndex((float) 1));
+                            pointMap.put(s_key, pointMarker);
+                        }
+                        if(pointMap.size() > 0){
+                            for(String key : pointMap.keySet()){
+                                if(!exists.contains(key)){
+                                    pointMap.get(key).remove();
+                                    pointMap.remove(key);
+                                }
+                            }
                         }
                     }
 
@@ -598,12 +637,14 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void addMarker(GoogleMap googleMap, float lat, float lon, float marker, String title, String msg){
-        googleMap.addMarker(new MarkerOptions()
+        Marker mapMarker = googleMap.addMarker(new MarkerOptions()
                 .position(new LatLng(lat, lon)) //37.450626, 127.128847
                 .icon(BitmapDescriptorFactory.defaultMarker(marker))
                 .snippet(msg)
                 .title(title)
                 .zIndex((float) 1));
+
+        userMap.put(title, mapMarker);
     }
 
     private void addAppoint(LatLng latLng, String title){
