@@ -55,6 +55,7 @@ public class UserActivity extends AppCompatActivity {
                             for(DataSnapshot node : dataSnapshot.getChildren()){
                                 String key = node.getKey();
                                 if(key.equals(nickname)){
+                                    MyApp.myUser = (User) node.getValue(User.class);
                                     MyApp.roomNickName = getRoomNickName(MyApp.roomChannel);
                                     intentMainActivity();
                                 }

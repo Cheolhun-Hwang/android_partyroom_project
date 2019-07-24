@@ -43,6 +43,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.hooneys.partyroom.Application.MyApp;
+import com.hooneys.partyroom.DO.UMarker;
 import com.hooneys.partyroom.DO.User;
 
 import java.lang.reflect.Array;
@@ -136,9 +137,6 @@ public class MainActivity extends AppCompatActivity
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        googleMap.clear();
-                        userMap.clear();
-
                         for(DataSnapshot node : dataSnapshot.getChildren()){
                             Log.d(TAG, "node Key : "+node.getKey() );
                             userMap.put(node.getKey(), null);
@@ -160,44 +158,52 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "User Length : " + userMap.size());
         for(final String key : userMap.keySet()){
             Log.d(TAG, "key : "+ key);
+
             MainActivity.rootRef
-                    .child("User")
+                    .child("Room")
+                    .child("Talk")
+                    .child(MyApp.roomChannel)
                     .child(key)
                     .addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                             Log.d(TAG, "Data : " + dataSnapshot.getValue().toString());
 
-                            double lat = (double) dataSnapshot.child("lat").getValue();
-                            double lon = (double) dataSnapshot.child("lon").getValue();
-                            long marker = (long) dataSnapshot.child("markerColor").getValue();
-
-                            if(userMap.get(key) != null){
-                                userMap.get(key).remove();
-                                userMap.put(key, null);
-                            }
-
-                            if(googleMap != null){
-                                addMarker(googleMap,
-                                        (float) lat,
-                                        (float) lon,
-                                        marker,
-                                        dataSnapshot.child("nickName").getValue().toString(),
-                                        dataSnapshot.child("msg").getValue().toString()
-                                );
-
-                                if(dataSnapshot.child("nickName").getValue()
-                                        .toString().equals(MyApp.roomNickName)){
-
-                                    googleMap.moveCamera(
-                                            CameraUpdateFactory.newLatLngZoom(
-                                                    new LatLng(
-                                                            (float) lat,
-                                                            (float) lon
-                                                    ),
-                                                    mainCameraZoom)
-                                    );
+                            if(dataSnapshot == null){
+                                if(userMap.containsKey(key)){
+                                    userMap.get(key).remove();
                                 }
+                            }else{
+                                UMarker uMarker = (UMarker)dataSnapshot.getValue(UMarker.class);
+
+                                if(userMap.get(key) != null){
+                                    userMap.get(key).remove();
+                                    userMap.put(key, null);
+                                }
+
+                                String umsg = "상태 메시지가 존재하지 않습니다.";
+
+                                if(googleMap != null){
+                                    addMarker(googleMap,
+                                            (float) uMarker.getLat(),
+                                            (float) uMarker.getLon(),
+                                            uMarker.getMarker(),
+                                            key,
+                                            umsg
+                                    );
+
+                                    if(key.equals(MyApp.roomNickName)){
+                                        googleMap.moveCamera(
+                                                CameraUpdateFactory.newLatLngZoom(
+                                                        new LatLng(
+                                                                (float) uMarker.getLat(),
+                                                                (float) uMarker.getLon()
+                                                        ),
+                                                        mainCameraZoom)
+                                        );
+                                    }
+                                }
+
                             }
                         }
 
@@ -267,14 +273,14 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(getApplicationContext(),"GPS 값 받음,", Toast.LENGTH_SHORT).show();
                 if(nowAppLocation != null){
                     setLocationForRoom();
-                    setLocationForUser();
+//                    setLocationForUser();
                 }
             }else if(manager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER) != null){
                 nowAppLocation = manager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
                 Toast.makeText(getApplicationContext(),"Wifi 값 받음", Toast.LENGTH_SHORT).show();
                 if(nowAppLocation != null){
                     setLocationForRoom();
-                    setLocationForUser();
+//                    setLocationForUser();
                 }
             }else{
                 // 1. GPS 또는 Wifi 켜지지 않은 경우
@@ -405,7 +411,7 @@ public class MainActivity extends AppCompatActivity
                 + nowAppLocation.getProvider());
 
         setLocationForRoom();
-        setLocationForUser();
+//        setLocationForUser();
     }
 
     private void setLocationForUser() {
@@ -422,20 +428,19 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void setLocationForRoom() {
+        UMarker uMarker = new UMarker(
+                nowAppLocation.getLatitude(),
+                nowAppLocation.getLongitude(),
+                MyApp.myUser.getMarkerColor()
+        );
+
+
         MainActivity.rootRef
                 .child("Room")
                 .child("Talk")
                 .child(MyApp.roomChannel)
                 .child(MyApp.roomNickName)
-                .child("lat")
-                .setValue(nowAppLocation.getLatitude());
-        MainActivity.rootRef
-                .child("Room")
-                .child("Talk")
-                .child(MyApp.roomChannel)
-                .child(MyApp.roomNickName)
-                .child("lon")
-                .setValue(nowAppLocation.getLongitude());
+                .setValue(uMarker);
     }
 
     @Override
@@ -648,7 +653,12 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void addAppoint(LatLng latLng, String title){
-       Date nowDate = new Date(System.currentTimeMillis());
+
+        if(latLng.latitude == 0.0f || latLng.longitude == 0.0f){
+            Toast.makeText(this, "해당 주소를 찾지 못했습니다.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Date nowDate = new Date(System.currentTimeMillis());
         SimpleDateFormat simple = new SimpleDateFormat("yyyyMMdd_hhmmsss", Locale.KOREA);
 
         Map<String, String> map = new HashMap<>();

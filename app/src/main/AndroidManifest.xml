@@ -25,7 +25,10 @@
         <activity
             android:name=".LocationActivity"
             android:parentActivityName=".MainActivity"
-            android:screenOrientation="portrait" /> <!-- 라이브러리 사용 설정 -->
+            android:screenOrientation="portrait" >
+        </activity>
+
+        <!-- 라이브러리 사용 설정 -->
         <uses-library android:name="com.google.android.maps" />
 
         <meta-data

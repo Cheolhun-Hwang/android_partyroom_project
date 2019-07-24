@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class LocationActivity extends AppCompatActivity {
+    private final static String TAG = LocationActivity.class.getSimpleName();
     private EditText locationEdit;
     private Button send;
 
@@ -57,8 +58,12 @@ public class LocationActivity extends AppCompatActivity {
         Address address = null;
         try{
             list = geocoder.getFromLocationName(spot, 1);
+            if (list.size() < 1){
+                return null;
+            }
             address = list.get(0);
             if(address != null){
+                Log.d(TAG, "Location : "+address.toString());
                 return new LatLng(address.getLatitude(), address.getLongitude());
             }
         } catch (IOException e) {
