@@ -131,6 +131,13 @@ public class UserActivity extends AppCompatActivity {
         MainActivity.rootRef.child("User").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(dataSnapshot == null || (dataSnapshot.getChildrenCount() < 1) ){
+                    Toast.makeText(UserActivity.this,
+                            "생성된 아이디가 아닙니다.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+
                 for (DataSnapshot node : dataSnapshot.getChildren()){
                     if(node.getKey().equals(s_nickname)){
                         if(node.child("pwd").getValue().toString().equals(s_pwd)){
@@ -170,33 +177,17 @@ public class UserActivity extends AppCompatActivity {
         MainActivity.rootRef.child("User").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(dataSnapshot == null || (dataSnapshot.getChildrenCount() < 1) ){
+                    makeUser(s_nickname, s_pwd);
+                    return;
+                }
+
                 for(DataSnapshot item : dataSnapshot.getChildren()){
                     if(item.getKey().equals(s_nickname)){
                         Toast.makeText(UserActivity.this, "중복된 닉네임입니다.", Toast.LENGTH_SHORT).show();
                         break;
                     }else{
-                        final User user = new User();
-                        user.setNickName(s_nickname);
-                        user.setMarkerColor(markerColorFloat);
-                        user.setPwd(s_pwd);
-                        MainActivity.rootRef
-                                .child("User")
-                                .child(s_nickname)
-                                .setValue(user)
-                                .addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception e) {
-                                        Toast.makeText(UserActivity.this, "생성에 실패하였습니다.", Toast.LENGTH_SHORT).show();
-                                    }
-                                })
-                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                    @Override
-                                    public void onSuccess(Void aVoid) {
-                                        saveRoomInformation(user);
-                                        MyApp.myUser = user;
-                                        intentMainActivity();
-                                    }
-                                });
+                        makeUser(s_nickname, s_pwd);
                     }
                 }
             }
@@ -206,6 +197,32 @@ public class UserActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    private void makeUser(final String s_nickname, String s_pwd) {
+        final User user = new User();
+        user.setNickName(s_nickname);
+        user.setMarkerColor(markerColorFloat);
+        user.setPwd(s_pwd);
+        MainActivity.rootRef
+                .child("User")
+                .child(s_nickname)
+                .setValue(user)
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(UserActivity.this, "생성에 실패하였습니다.", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        saveRoomInformation(user);
+                        MyApp.myUser = user;
+                        MyApp.roomNickName = s_nickname;
+                        intentMainActivity();
+                    }
+                });
     }
 
     private void intentMainActivity() {

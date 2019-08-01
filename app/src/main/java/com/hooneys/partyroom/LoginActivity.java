@@ -101,14 +101,43 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void addRoom() {
+        Log.d(TAG, "AddRoom...");
         final String s_room = room.getText().toString();
-        String s_key = key.getText().toString();
+        final String s_key = key.getText().toString();
 
         if(s_room.trim().isEmpty() || s_key.trim().isEmpty()){
             Toast.makeText(this, "방 정보를 정확히 작성해주세요.", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        MainActivity.rootRef.child("Room")
+                .child("Info").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(dataSnapshot == null || dataSnapshot.getChildrenCount() < 1){
+                    adding(s_room, s_key);
+                    return;
+                }
+
+                for(DataSnapshot node : dataSnapshot.getChildren()){
+                    if(node.getKey().equals(s_key)){
+                        Toast.makeText(LoginActivity.this,
+                                "중복된 방 번호 입니다.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                }
+
+                adding(s_room, s_key);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void adding(final String s_room, String s_key) {
         MainActivity.rootRef.child("Room")
                 .child("Info")
                 .child(s_room)
