@@ -414,19 +414,6 @@ public class MainActivity extends AppCompatActivity
 //        setLocationForUser();
     }
 
-    private void setLocationForUser() {
-        MainActivity.rootRef
-                .child("User")
-                .child(MyApp.roomNickName)
-                .child("lat")
-                .setValue(nowAppLocation.getLatitude());
-        MainActivity.rootRef
-                .child("User")
-                .child(MyApp.roomNickName)
-                .child("lon")
-                .setValue(nowAppLocation.getLongitude());
-    }
-
     private void setLocationForRoom() {
         UMarker uMarker = new UMarker(
                 nowAppLocation.getLatitude(),
@@ -642,6 +629,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void addMarker(GoogleMap googleMap, float lat, float lon, float marker, String title, String msg){
+        Log.d(TAG, "addMarker lat : " + lat + " / lon : " + lon + " / marker : " + marker );
         Marker mapMarker = googleMap.addMarker(new MarkerOptions()
                 .position(new LatLng(lat, lon)) //37.450626, 127.128847
                 .icon(BitmapDescriptorFactory.defaultMarker(marker))

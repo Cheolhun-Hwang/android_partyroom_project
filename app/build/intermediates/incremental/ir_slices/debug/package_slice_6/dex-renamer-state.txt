@@ -1,4 +1,4 @@
-#Wed Jul 24 13:22:01 KST 2019
-base.0=/Users/hooney/Documents/workspace/android/android_partyroom_project/app/build/intermediates/transforms/dexMerger/debug/6
+#Thu Aug 01 12:15:29 KST 2019
+base.0=D\:\\workspace\\Android\\android_partyroom_project\\app\\build\\intermediates\\transforms\\dexMerger\\debug\\6
 path.0=classes.dex
 renamed.0=classes.dex
